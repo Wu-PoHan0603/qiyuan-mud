@@ -1,0 +1,20 @@
+[
+    {
+        "name": "peter",
+        "realm_index": 0,
+        "realm": "練氣期",
+        "level": 1,
+        "exp": 0,
+        "hp": 100,
+        "mp": 100,
+        "spirit_stone": 50,
+        "pill": 3,
+        "weapon": "木劍",
+        "weapon_ATK": 5,
+        "armor": "布衣",
+        "armor_DEF": 5,
+        "skill": "火球術",
+        "skill_power": 20,
+        "bag": []
+    }
+]
