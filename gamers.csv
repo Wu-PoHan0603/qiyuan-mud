@@ -1,2 +1,4 @@
-name,realm_index,realm,level,exp,hp,spirit_stone,pill,weapon,weapon_ATK,armor,armor_DEF
-peter,1,築基期,15,7,90,380,0,木劍,5,布衣,5
+name,realm_index,realm,level,exp,hp,spirit_stone,pill,weapon,weapon_ATK,armor,armor_DEF,mp,skill,skill_power,bag
+peter,1,築基期,15,7,90,380,0,木劍,5,布衣,5,100.0,火球術,20.0,[]
+jerry,0,練氣期,1,0,100,50,3,木劍,5,布衣,5,100.0,火球術,20.0,[]
+max,0,練氣期,1,22,100,100,3,木劍,5,布衣,5,100.0,火球術,20.0,[]
