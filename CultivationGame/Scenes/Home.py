@@ -1,7 +1,9 @@
 # Scenes/Home.py
 import pygame
 from Ui.Button import Button
+from Systems.Level_system import LevelSystem
 
+level_lookup = LevelSystem()
 class HomeScene:
     def __init__(self, width, height, font_path):
         self.width = width
@@ -13,13 +15,22 @@ class HomeScene:
         self.spiritual_root = "凡人"
         self.cultivation = 0  # 修為
         self.realm = "凡人境界" # 境界
+
+        button_y = 600
+        button_w = 180
+        button_h = 50
         
         # 2. 建立洞府畫面的基本按鈕
         btn_width, btn_height = 200, 50
         # 放在畫面右側或下方作為導覽
-        self.btn_train = Button(100, 550, btn_width, btn_height, "閉關修煉", font_path, 24)
-        self.btn_alchemy = Button(400, 550, btn_width, btn_height, "前往煉丹", font_path, 24)
-        self.btn_back = Button(700, 550, btn_width, btn_height, "返回選單", font_path, 24)
+        self.btn_train = Button(70, button_y, button_w, button_h, "閉關修煉", font_path, 24)
+        self.btn_alchemy = Button(300, button_y, button_w, button_h, "前往煉丹", font_path, 24)
+        self.btn_archive = Button(530, button_y, button_w, button_h, "天書玉簡", font_path, 24)
+        self.btn_back = Button(760, button_y, button_w, button_h, "返回選單", font_path, 24)
+
+        self.show_archive_menu = False
+        self.btn_sub_save = None
+        self.btn_sub_load = None
 
     def enter_scene(self, name, root):
         """核心函式：用來接收創角畫面流轉過來的玩家資料"""
@@ -37,21 +48,20 @@ class HomeScene:
         """處理洞府內的點擊事件"""
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             pos = pygame.mouse.get_pos()
-            
-            # 點擊「閉關修煉」
-            if self.btn_train.rect.collidepoint(pos):
-                self.cultivation += 10
-                if self.cultivation >= 100 and self.realm == "凡人境界":
-                    self.realm = "練氣期一層"
+            pass
+            # # 點擊「閉關修煉」
+            # if self.btn_train.rect.collidepoint(pos):
+            #     self.cultivation += 10
+            #     if self.cultivation >= 100 and self.realm == "凡人境界":
+            #         self.realm = "練氣期一層"
                     
-            # 點擊「前往煉丹」
-            elif self.btn_alchemy.rect.collidepoint(pos):
-                return "ALCHEMY" # 未來切換到你的 Alchemy.py
+            # # 點擊「前往煉丹」
+            # elif self.btn_alchemy.rect.collidepoint(pos):
+            #     return "ALCHEMY" # 未來切換到你的 Alchemy.py
                 
-            # 點擊「返回選單」
-            elif self.btn_back.rect.collidepoint(pos):
-                return "MENU"
-                
+            # # 點擊「返回選單」
+            # elif self.btn_back.rect.collidepoint(pos):
+            #     return "MENU"         
         return None
 
     def draw(self, screen):
@@ -72,9 +82,16 @@ class HomeScene:
         
         # 右側：修煉進度條
         self.draw_text(screen, "【 當前修為累積 】", 24, 700, 200)
-        self.draw_text(screen, f"{self.cultivation} / 100 點", 28, 700, 250, (255, 255, 255))
-        
+        max_dict = {"凡人境界": 100, "練氣一層": 150, "練氣二層": 250, "練氣三層": 400, "築基初期": 1000, "築基中期": 2000, "築基後期": 4000, "金丹大能": 99999}
+        # 🌟 透過動態境界系統，精確抓取當前九層體系中該層級的最高上限
+        current_max = level_lookup.get_max_cultivation(self.realm)
+        self.draw_text(screen, f"{self.cultivation} / {current_max} 點", 28, 700, 250, (255, 255, 255))
         # 繪製按鈕
         self.btn_train.draw(screen)
         self.btn_alchemy.draw(screen)
+        self.btn_archive.draw(screen)
         self.btn_back.draw(screen)
+
+        if self.show_archive_menu:
+            if self.btn_sub_save: self.btn_sub_save.draw(screen)
+            if self.btn_sub_load: self.btn_sub_load.draw(screen)
