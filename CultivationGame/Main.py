@@ -85,7 +85,7 @@ while running:
 
     # === 4. 按鈕狀態/變色更新區 (帶有安全檢查) ===
     if action_screen:
-        # 🌟【修改點 1】修正縮排，並讓主選單讀取時也支援恢復「儲物袋背包」
+        # 主選單讀取時也支援恢復「儲物袋背包」
         if current_scene == "MENU" and hasattr(action_screen, 'buttons'):
             # 1. 偵測點擊第一個按鈕 [開始遊戲] (索引 0)
             if action_screen.buttons[0].update():
@@ -100,8 +100,11 @@ while running:
                     # 恢復最新的九層修為與境界
                     scene["HOME"].cultivation = data.get("cultivation", 0)
                     scene["HOME"].realm = data.get("realm", "凡人境界")
-                    # 🌟 新增：讓主選單讀檔時，儲物袋背包數據也能順利還原
+                    # 還原儲物袋背包數據
                     item_sys.load_save_data(data.get("inventory", {}))
+                    
+                    # 🌟【新增】讓一進遊戲的預設日誌顯示讀檔成功
+                    scene["HOME"].add_log("【天道因果】成功堪破時空，載入前世仙緣進度。")
                     
                     current_scene = "HOME"  # 破開時空，直接進入洞府！
                     print("【主選單】成功載入昔日因果與儲物袋，轉入洞府！")
@@ -117,7 +120,7 @@ while running:
             action_screen.btn_confirm.update()
             
         elif current_scene == "HOME" and hasattr(action_screen, 'btn_train'):
-            # 🌟【修改點 2】將閉關修煉與「九層大圓滿卡關/消耗築基丹」機制綁定
+            # 閉關修煉與「九層大圓滿卡關/消耗築基丹」機制綁定
             if action_screen.btn_train.update():
                 # 判定：是否達到練氣九層瓶頸（根據 Level_system 練氣九層上限為 360）
                 if "練氣期第9層" in action_screen.realm and action_screen.cultivation >= 360:
@@ -126,9 +129,16 @@ while running:
                         item_sys.remove_item("foundation_pill", 1)  # 消耗一顆築基丹
                         action_screen.realm = "築基期第1層"         # 晉升大境界
                         action_screen.cultivation = 0               # 修為重置
-                        print("🎉【逆天改命】你服下築基丹，真氣化液，成功破開天道屏障，晉升【築基期第1層】！")
+                        
+                        # 🌟【修改點 1】突破大境界成功：同步推送到畫面日誌區
+                        msg = "🎉【逆天改命】你服下築基丹，真氣化液，成功破開天道屏障，晉升【築基期第1層】！"
+                        action_screen.add_log(msg)
+                        print(msg)
                     else:
-                        print("💥【突破失敗】你已達練氣期九層大圓滿！前方築基屏障堅不可摧，儲物袋中缺乏「築基丹」，無法破境！")
+                        # 🌟【修改點 2】突破失敗卡關：同步推送到畫面日誌區
+                        msg = "💥【突破失敗】你已達練氣期九層大圓滿！前方築基屏障堅不可摧，儲物袋中缺乏「築基丹」，無法破境！"
+                        action_screen.add_log(msg)
+                        print(msg)
                 else:
                     # 未遇到大境界瓶頸，交由境界系統執行日常修煉與小階突破（如1層升2層）
                     new_realm, new_cult, log_message = level_sys.train(
@@ -138,58 +148,153 @@ while running:
                     )
                     action_screen.realm = new_realm
                     action_screen.cultivation = new_cult
+                    
+                    # 🌟【修改點 3】一般日常修煉：同步將修煉日誌推送到畫面日誌區
+                    action_screen.add_log(log_message)
                     print(log_message)  
+  
 
-            # 2. 偵測點擊【前往煉丹】
-            if action_screen.btn_alchemy.update():
-                # 💡 暫時測試代碼：點擊前往煉丹時，先打賞玩家一顆築基丹，方便您測試突破機制
-                item_sys.add_item("foundation_pill", 1)
-                current_scene = "ALCHEMY"
-                
-            # 3. 偵測點擊【返回選單】
+        elif current_scene == "HOME":
+            # ════════════════════════════════════════════════════════════
+            # 1. 基礎主導航按鈕偵測 (底部三大主按鈕)
+            # ════════════════════════════════════════════════════════════
+            
+            # 偵測點擊【返回選單】
             if action_screen.btn_back.update():
                 action_screen.show_archive_menu = False  # 離開前重置選單關閉
                 current_scene = "MENU"
 
-            # 4. 偵測點擊【天書玉簡】（切換多功能子選單）
+            # 偵測點擊【天書玉簡】（切換 11 大功能子選單的開關）
             if action_screen.btn_archive.update():
-                # 切換開關狀態
                 action_screen.show_archive_menu = not action_screen.show_archive_menu
-                if action_screen.show_archive_menu:
-                    # 當子選單打開時，在「天書玉簡」按鈕的正上方動態建立 [存檔] 與 [讀取] 子按鈕
-                    from Ui.Button import Button
-                    # X 座標拆開，Y 座標往上移到 545
-                    action_screen.btn_sub_save = Button(530, 545, 90, 45, "存檔", action_screen.font_path, 20)
-                    action_screen.btn_sub_load = Button(620, 545, 90, 45, "讀取", action_screen.font_path, 20)
 
-            # 5. 如果多功能選單是打開的，就額外偵測 [存檔] 與 [讀取] 的點擊
+            # ════════════════════════════════════════════════════════════
+            # 2. 依據天書選單【開啟 / 關閉】狀態進行分流偵測
+            # ════════════════════════════════════════════════════════════
             if action_screen.show_archive_menu:
-                # 偵測點擊【存檔】
-                if action_screen.btn_sub_save and action_screen.btn_sub_save.update():
+                # 🌟【天書玉簡開啟】偵測 11 大功能子按鈕的點擊事件
+                
+                # 1️⃣ 👉 偵測點擊【修士資訊】
+                if action_screen.sub_buttons["STATUS"].update():
+                    current_scene = "STATUS"
+                    action_screen.show_archive_menu = False
+                    action_screen.add_log("【天道窺探】展開修士法身，觀測根骨與命格。")
+                    print("【洞府】前往修士資訊介面。")
+
+                # 2️⃣ 👉 偵測點擊【儲物袋】
+                elif action_screen.sub_buttons["BAG"].update():
+                    current_scene = "BAG"
+                    action_screen.show_archive_menu = False
+                    action_screen.add_log("【儲物袋】神識探入袋中，清點修行資糧。")
+                    print("【洞府】前往儲物袋背包介面。")
+
+                # 3️⃣ 👉 偵測點擊【煉丹介面】
+                elif action_screen.sub_buttons["ALCHEMY"].update():
+                    # 💡 測試代碼：點擊前往煉丹時，先打賞玩家一顆築基丹，方便測試突破機制
+                    item_sys.add_item("foundation_pill", 1)
+                    current_scene = "ALCHEMY"
+                    action_screen.show_archive_menu = False
+                    action_screen.add_log("【丹道玄妙】引地心火，架紫金爐，準備煉製仙丹。")
+                    print("【洞府】獲得測試築基丹*1，前往煉丹房。")
+
+                # 4️⃣ 👉 偵測點擊【深層打坐】
+                elif action_screen.sub_buttons["MEDITATE"].update():
+                    current_scene = "MEDITATE"
+                    action_screen.show_archive_menu = False
+                    action_screen.add_log("【深層打坐】神游太虛，五心朝天，進入大定狀態。")
+                    print("【洞府】進入深層打坐場景。")
+
+                # 5️⃣ 👉 偵測點擊【極速修練】
+                elif action_screen.sub_buttons["FAST_TRAIN"].update():
+                    current_scene = "FAST_TRAIN"
+                    action_screen.show_archive_menu = False
+                    action_screen.add_log("【秘法逆天】燃燒壽元氣血，強行開啟百倍極速修煉！")
+                    print("【洞府】進入極速修煉介面。")
+
+                # 6️⃣ 👉 偵測點擊【探索秘境】
+                elif action_screen.sub_buttons["EXPLORE"].update():
+                    current_scene = "EXPLORE"
+                    action_screen.show_archive_menu = False
+                    action_screen.add_log("【尋仙問道】遁光飛出洞府，前往九幽秘境尋寶。")
+                    print("【洞府】前往秘境探索。")
+
+                # 7️⃣ 👉 偵測點擊【世界BOSS】
+                elif action_screen.sub_buttons["BOSS"].update():
+                    current_scene = "BOSS"
+                    action_screen.show_archive_menu = False
+                    action_screen.add_log("【神魔降世】遠方傳來洪荒巨獸怒吼，諸多大能正前往圍剿！")
+                    print("【洞府】前往世界BOSS討伐戰。")
+
+                # 8️⃣ 👉 偵測點擊【萬寶商店】
+                elif action_screen.sub_buttons["SHOP"].update():
+                    current_scene = "SHOP"
+                    action_screen.show_archive_menu = False
+                    action_screen.add_log("【萬寶閣】琳琅滿目，奇珍異寶盡在此處。")
+                    print("【洞府】進入萬寶商店。")
+
+                # 9️⃣ 👉 偵測點擊【刻印存檔】
+                elif action_screen.sub_buttons["SAVE_GAME"].update():
                     current_data = {
                         "name": action_screen.player_name,
                         "spiritual_root": action_screen.spiritual_root,
-                        "cultivation": action_screen.cultivation,  # 手動存檔時記錄目前修為
-                        "realm": action_screen.realm,              # 記錄目前境界
-                        "inventory": item_sys.get_save_data(),     # 記錄目前背包
+                        "cultivation": action_screen.cultivation,
+                        "realm": action_screen.realm,
+                        "inventory": item_sys.get_save_data(),
                     }
-                    save_sys.save_game(current_data)  # 呼叫存檔系統寫入 JSON
+                    save_sys.save_game(current_data)
                     action_screen.show_archive_menu = False  # 存完檔自動收起選單
-                    print("【存檔】成功將當前修為與進度刻印至天書！")
+                    
+                    save_msg = "✨【天書刻印】道友運轉本源神識，已將一身修為封入天書玉簡。"
+                    action_screen.add_log(save_msg)
+                    print(save_msg)
 
-                # 偵測點擊【讀取】
-                if action_screen.btn_sub_load and action_screen.btn_sub_load.update():
-                    data = save_sys.load_game()  # 呼叫存檔系統讀取 JSON
+                # 🔟 👉 偵測點擊【讀取仙緣】
+                elif action_screen.sub_buttons["LOAD_GAME"].update():
+                    data = save_sys.load_game()
                     if data:
-                        # 恢復玩家的基本動態資料
                         action_screen.enter_scene(data["name"], data["spiritual_root"])
-                        # 恢復修為與境界數據
                         action_screen.cultivation = data.get("cultivation", 0)
                         action_screen.realm = data.get("realm", "凡人境界")
-                        # 恢復儲物袋背包
                         item_sys.load_save_data(data.get("inventory", {}))
-                        print("【讀取】成功破開時空，還原昔日修為與儲物袋！")
+                        
+                        load_msg = "🌌【時空迴溯】天書微光大盛！昔日不滅因果已盡數重現人間。"
+                        action_screen.add_log(load_msg)
+                        print(load_msg)
+                    else:
+                        fail_msg = "❌【讀取失敗】天書無字，世間尚未留下道友的前世痕跡。"
+                        action_screen.add_log(fail_msg)
+                        print(fail_msg)
                     action_screen.show_archive_menu = False  # 讀取完自動收起選單
+
+                # 1️⃣1️⃣ 👉 偵測點擊【系統設置】
+                elif action_screen.sub_buttons["SETTING"].update():
+                    current_scene = "SETTING"
+                    action_screen.show_archive_menu = False
+                    action_screen.add_log("【天道律令】調整法眼視界與天地仙音（系統設置）。")
+                    print("【洞府】進入系統設置選單。")
+
+            else:
+                # 🌟【天書玉簡關閉】才允許點擊【閉關修煉】主按鈕（防止空氣穿透點擊）
+                if action_screen.btn_train.update():
+                    # 判定：是否達到練氣九層瓶頸
+                    if "練氣期第9層" in action_screen.realm and action_screen.cultivation >= 360:
+                        if item_sys.get_item_count("foundation_pill") > 0:
+                            item_sys.remove_item("foundation_pill", 1)
+                            action_screen.realm = "築基期第1層"
+                            action_screen.cultivation = 0
+                            action_screen.add_log("【天道突破】你吞服了築基丹，體內靈力液化，成功晉升築基期！")
+                        else:
+                            action_screen.add_log("【仙途瓶頸】你已達練氣圓滿，缺少「築基丹」強行突破將道基受損！")
+                    else:
+                        # 正常修煉：增加修為
+                        current_max = level_lookup.get_max_cultivation(action_screen.realm)
+                        if action_screen.cultivation < current_max:
+                            action_screen.cultivation += 10
+                            action_screen.add_log("【閉關修煉】你運轉周天功法，吐納天地靈氣，修為有所精進。")
+                        else:
+                            action_screen.add_log("【修為瓶頸】修為已至當前境界圓滿，請尋求突破之法！")
+
+
 
 
 
