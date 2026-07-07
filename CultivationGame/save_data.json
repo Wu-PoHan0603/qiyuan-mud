@@ -1,8 +1,9 @@
 {
     "name": "道友",
-    "spiritual_root": "火",
-    "cultivation": 360,
-    "realm": "練氣期第9層",
+    "spiritual_root": "土",
+    "realm": "凡人境界",
+    "cultivation": 0,
+    "spirit_stone": 0,
     "inventory": {
         "spirit_stone": 10,
         "foundation_pill": 0,
