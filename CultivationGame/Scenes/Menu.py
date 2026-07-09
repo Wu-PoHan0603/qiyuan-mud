@@ -1,8 +1,9 @@
 # Scenes/Menu.py
 import pygame
 from Ui.Button import create_menu_buttons_list
+from Scenes.BaseScene import BaseScene
 
-class MenuScene:
+class MenuScene(BaseScene):
     def __init__(self, width, height, font_path, background_img):
         self.width = width
         self.height = height

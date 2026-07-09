@@ -2,10 +2,11 @@
 import pygame
 from Ui.Button import Button
 from Systems.Level_system import LevelSystem
+from Scenes.BaseScene import BaseScene
 
 level_lookup = LevelSystem()
 
-class HomeScene:
+class HomeScene(BaseScene):
     def __init__(self, width, height, font_path):
         self.width = width
         self.height = height

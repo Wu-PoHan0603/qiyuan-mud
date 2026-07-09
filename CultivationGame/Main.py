@@ -10,6 +10,7 @@ from Scenes.Home import HomeScene
 from Systems.Save_system import SaveSystem
 from Systems.Level_system import LevelSystem
 from Systems.Item_system import ItemSystem
+from SceneManager import SceneManager
 
 FPS = 60
 WIDTH, HEIGHT = 1000, 700
@@ -30,12 +31,13 @@ background_img.set_alpha(80)
 font_name = os.path.join(BASE_DIR, "Font", "LXGWWenKai-Medium.ttf")
 
 # Core
-scene = {
+manager = SceneManager()
+manager.add_scene = {
     "MENU": MenuScene(WIDTH, HEIGHT, font_name, background_img),
     "CREATE": CreateScene(WIDTH, HEIGHT, font_name),
     "HOME": HomeScene(WIDTH, HEIGHT, font_name),
 }
-current_scene = "MENU"
+manager.change_scene = "MENU"
 save_sys = SaveSystem()
 level_sys = LevelSystem()
 item_sys = ItemSystem()
@@ -43,7 +45,7 @@ item_sys = ItemSystem()
 running = True
 while running:
     clock.tick(FPS)
-    action_screen = scene.get(current_scene)
+    action_screen = manager.current
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -59,7 +61,7 @@ while running:
                     # 將創角畫面刷新出來的名字與靈根，精確傳遞給 Home 畫面
                     p_name = action_screen.player_name
                     p_root = action_screen.spiritual_root
-                    scene["HOME"].enter_scene(p_name, p_root)
+                    manager.change_scene["HOME"].enter_scene(p_name, p_root)
 
                     new_player = {
                         "name": p_name,
@@ -74,10 +76,10 @@ while running:
                 elif current_scene == "MENU" and next_scene == "LOAD":
                     data = save_sys.load_game()
                     if data:
-                        scene["HOME"].enter_scene(data["name"], data["spiritual_root"])
-                        scene["HOME"].cultivation = data.get("cultivation", 0)
-                        scene["HOME"].realm = data.get("realm", "凡人境界")
-                        current_scene = "HOME"
+                        manager.change_scene["HOME"].enter_scene(data["name"], data["spiritual_root"])
+                        manager.change_scene["HOME"].cultivation = data.get("cultivation", 0)
+                        manager.change_scene["HOME"].realm = data.get("realm", "凡人境界")
+                        manager.change_scene = "HOME"
                     else:
                         print("【主程式】讀取失敗，沒有存檔紀錄！")
                 else:
@@ -89,24 +91,24 @@ while running:
         if current_scene == "MENU" and hasattr(action_screen, 'buttons'):
             # 1. 偵測點擊第一個按鈕 [開始遊戲] (索引 0)
             if action_screen.buttons[0].update():
-                current_scene = "CREATE"
+                manager.change_scene = "CREATE"
                 
             # 2. 偵測點擊第二個按鈕 [讀取遊戲] (索引 1)
             elif action_screen.buttons[1].update():
                 data = save_sys.load_game()  # 呼叫存檔系統讀取 JSON
                 if data:
                     # 恢復名字與靈根
-                    scene["HOME"].enter_scene(data["name"], data["spiritual_root"])
+                    manager.change_scene["HOME"].enter_scene(data["name"], data["spiritual_root"])
                     # 恢復最新的九層修為與境界
-                    scene["HOME"].cultivation = data.get("cultivation", 0)
-                    scene["HOME"].realm = data.get("realm", "凡人境界")
+                    manager.change_scene["HOME"].cultivation = data.get("cultivation", 0)
+                    manager.change_scene["HOME"].realm = data.get("realm", "凡人境界")
                     # 還原儲物袋背包數據
                     item_sys.load_save_data(data.get("inventory", {}))
                     
                     # 🌟【新增】讓一進遊戲的預設日誌顯示讀檔成功
-                    scene["HOME"].add_log("【天道因果】成功堪破時空，載入前世仙緣進度。")
+                    manager.change_scene["HOME"].add_log("【天道因果】成功堪破時空，載入前世仙緣進度。")
                     
-                    current_scene = "HOME"  # 破開時空，直接進入洞府！
+                    manager.change_scene = "HOME"  # 破開時空，直接進入洞府！
                     print("【主選單】成功載入昔日因果與儲物袋，轉入洞府！")
                 else:
                     print("【主選單】天書無字！找不到任何存檔紀錄，請先點擊開始遊戲。")
@@ -162,7 +164,7 @@ while running:
             # 偵測點擊【返回選單】
             if action_screen.btn_back.update():
                 action_screen.show_archive_menu = False  # 離開前重置選單關閉
-                current_scene = "MENU"
+                manager.change_scene = "MENU"
 
             # 偵測點擊【天書玉簡】（切換 11 大功能子選單的開關）
             if action_screen.btn_archive.update():
@@ -287,7 +289,7 @@ while running:
                             action_screen.add_log("【仙途瓶頸】你已達練氣圓滿，缺少「築基丹」強行突破將道基受損！")
                     else:
                         # 正常修煉：增加修為
-                        current_max = level_lookup.get_max_cultivation(action_screen.realm)
+                        #current_max = level_lookup.get_max_cultivation(action_screen.realm)
                         if action_screen.cultivation < current_max:
                             action_screen.cultivation += 10
                             action_screen.add_log("【閉關修煉】你運轉周天功法，吐納天地靈氣，修為有所精進。")
