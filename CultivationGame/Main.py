@@ -289,7 +289,7 @@ while running:
                             action_screen.add_log("【仙途瓶頸】你已達練氣圓滿，缺少「築基丹」強行突破將道基受損！")
                     else:
                         # 正常修煉：增加修為
-                        #current_max = level_lookup.get_max_cultivation(action_screen.realm)
+                        current_max = level_lookup.get_max_cultivation(action_screen.realm)
                         if action_screen.cultivation < current_max:
                             action_screen.cultivation += 10
                             action_screen.add_log("【閉關修煉】你運轉周天功法，吐納天地靈氣，修為有所精進。")
