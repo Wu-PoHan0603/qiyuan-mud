@@ -1,55 +1,65 @@
 # 按鈕管理 (Button.py)
 import pygame
 
+
 class Button:
-    def __init__(self, x, y, width, height, text, font_path=None, font_size=24):
+
+    def __init__(self, x, y, width, height, text,
+                 font_path=None, font_size=24):
+
         self.rect = pygame.Rect(x, y, width, height)
+        self.current_color = self.normal_color
         self.text = text
-        self.font_size = font_size
 
         if font_path:
             self.font = pygame.font.Font(font_path, font_size)
         else:
-            self.font = pygame.font.SysFont("Font", "LXGWWenKai-Medium.ttf", font_size)
+            self.font = pygame.font.SysFont(None, font_size)
 
-        self.normal_color = (70, 70, 70)     # 暗灰色
-        self.hover_color = (120, 120, 120)   # 亮灰色
-        self.text_color = (255, 255, 255)    # 白色
-        
-        self.current_color = self.normal_color
-        self.clicked = False
+        self.normal_color = (70, 70, 70)
+        self.hover_color = (120, 120, 120)
+        self.text_color = (255, 255, 255)
 
+    # ------------------------------
+    # 更新 Hover
+    # ------------------------------
     def update(self):
-        """偵測滑鼠狀態，並回傳是否被點擊 (True/False)"""
-        action = False
-        pos = pygame.mouse.get_pos()
 
-        # 1. 偵測滑鼠是否懸停在按鈕矩形內
-        if self.rect.collidepoint(pos):
-            self.current_color = self.hover_color 
-            
-            # 2. 偵測滑鼠左鍵點擊
-            if pygame.mouse.get_pressed()[0] == 1 and not self.clicked:
-                self.clicked = True
-                action = True
+        if self.rect.collidepoint(pygame.mouse.get_pos()):
+            self.current_color = self.hover_color
         else:
-            self.current_color = self.normal_color 
+            self.current_color = self.normal_color
 
-        # 3. 滑鼠放開時重置點擊狀態
-        if pygame.mouse.get_pressed()[0] == 0:
-            self.clicked = False
-            
-        return action
+    # ------------------------------
+    # 是否被點擊
+    # ------------------------------
+    def is_clicked(self, event):
 
-    def draw(self, surf):
-        pygame.draw.rect(surf, self.current_color, self.rect)
-        pygame.draw.rect(surf, (255, 255, 255), self.rect, 2)
+        return (
+            event.type == pygame.MOUSEBUTTONDOWN
+            and event.button == 1
+            and self.rect.collidepoint(event.pos)
+        )
 
-        text_surf = self.font.render(self.text, True, self.text_color)
-        text_rect = text_surf.get_rect()
-        text_rect.center = self.rect.center 
+    # ------------------------------
+    # 畫按鈕
+    # ------------------------------
+    def draw(self, surface):
 
-        surf.blit(text_surf, text_rect)
+        pygame.draw.rect(surface, self.current_color, self.rect)
+
+        pygame.draw.rect(surface, (255,255,255), self.rect,2)
+
+        text = self.font.render(
+            self.text,
+            True,
+            self.text_color
+        )
+
+        surface.blit(
+            text,
+            text.get_rect(center=self.rect.center)
+        )
 
 def create_menu_buttons_list(width, font_name, btn_width=255, btn_height=60):
     """利用迴圈動態建立按鈕清單"""
