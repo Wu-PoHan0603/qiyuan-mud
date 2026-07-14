@@ -1,53 +1,65 @@
 # Scenes/Menu.py
-from Scenes.BaseScene import BaseScene
 import pygame
 
+from Scenes.BaseScene import BaseScene
+from Ui.Button import create_menu_buttons_list
+
+
 class MenuScene(BaseScene):
+    """遊戲主選單場景。"""
+
     def __init__(self, width, height, font_name, background):
-        self.widht = width
+        self.width = width
         self.height = height
         self.font_name = font_name
         self.background = background
 
-    #初始化
-    FPS = 60
-    WIDTH, HEIGHT = 1000, 700
-    black = (0, 0, 0)
-    white = (255, 255, 255)
-    #遊戲初始化
-    pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("修仙世界")
-    clock = pygame.time.Clock()
+        self.buttons = create_menu_buttons_list(
+            width=self.width,
+            font_name=self.font_name,
+        )
+
+        # 方便直接用名稱存取按鈕
+        self.btn_start = self.buttons[0]
+        self.btn_load = self.buttons[1]
+        self.btn_quit = self.buttons[2]
+
+        self.title_font = pygame.font.Font(self.font_name, 64)
 
     def enter(self):
-        print("進入 Menu")
+        print("【場景】進入主選單")
 
     def exit(self):
-        print("離開 Menu")
+        print("【場景】離開主選單")
 
     def handle_event(self, event):
+        if self.btn_start.is_clicked(event):
+            return "CREATE"
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        if self.btn_load.is_clicked(event):
+            return "LOAD"
 
-            if self.btn_start.is_clicked(event):
-                return "CREATE"
-
-            elif self.btn_load.is_clicked(event):
-                return "LOAD"
-
-            elif self.btn_quit.is_clicked(event):
-                return "QUIT"
+        if self.btn_quit.is_clicked(event):
+            return "QUIT"
 
         return None
 
     def update(self):
-        pass
+        for button in self.buttons:
+            button.update()
 
     def draw(self, screen):
+        screen.blit(self.background, (0, 0))
 
-        screen.blit(self.background, (0,0))
+        title_surface = self.title_font.render(
+            "修仙世界",
+            True,
+            (255, 255, 255),
+        )
+        title_rect = title_surface.get_rect(
+            center=(self.width // 2, 150)
+        )
+        screen.blit(title_surface, title_rect)
 
-        self.btn_start.draw(screen)
-        self.btn_load.draw(screen)
-        self.btn_quit.draw(screen)
+        for button in self.buttons:
+            button.draw(screen)

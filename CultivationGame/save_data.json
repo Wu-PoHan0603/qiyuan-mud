@@ -2,8 +2,10 @@
     "name": "道友",
     "spiritual_root": "土",
     "realm": "凡人境界",
-    "cultivation": 0,
-    "spirit_stone": 0,
+    "cultivation": 50,
+    "spirit_stone": 10,
+    "hp": 100,
+    "mp": 100,
     "inventory": {
         "spirit_stone": 10,
         "foundation_pill": 0,
