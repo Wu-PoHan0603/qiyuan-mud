@@ -79,17 +79,58 @@ class BagScene(BaseScene):
             self.message = "聚氣丹不足，無法服用。"
             return
 
-        if self.item_system.remove_item(
+        # 練氣九層已圓滿時，不允許浪費聚氣丹
+        current_realm = self.home_scene.player.realm
+        current_cultivation = (
+            self.home_scene.player.cultivation
+        )
+
+        current_max = (
+            self.home_scene.level_system
+            .get_max_cultivation(current_realm)
+        )
+
+        if (
+            current_realm == "練氣期第9層"
+            and current_cultivation >= current_max
+        ):
+            self.message = (
+                "目前已達練氣九層圓滿，"
+                "請使用築基丹突破。"
+            )
+            return
+
+        removed = self.item_system.remove_item(
             "gathering_pill",
             1,
-        ):
-            self.home_scene.player.cultivation += 50
-            self.message = (
-                "服下聚氣丹，修為增加 50 點。"
-            )
-            self.home_scene.add_log(
-                "【丹藥生效】聚氣丹化作靈力，修為增加50點。"
-            )
+        )
+
+        if not removed:
+            self.message = "聚氣丹使用失敗。"
+            return
+
+        (
+            new_realm,
+            new_cultivation,
+            result_message,
+        ) = self.home_scene.level_system.add_cultivation(
+            current_realm,
+            current_cultivation,
+            50,
+        )
+
+        self.home_scene.player.realm = new_realm
+        self.home_scene.player.cultivation = (
+            new_cultivation
+        )
+
+        self.message = (
+            f"服下聚氣丹，{result_message}"
+        )
+
+        self.home_scene.add_log(
+            f"【丹藥生效】{result_message}"
+        )
 
     def draw_text(
         self,

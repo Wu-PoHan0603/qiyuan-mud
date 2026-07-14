@@ -128,6 +128,45 @@ class HomeScene(BaseScene):
         return None
 
     def _train(self):
+        # 練氣九層圓滿，嘗試使用築基丹
+        if (
+            self.player.realm == "練氣期第9層"
+            and self.player.cultivation
+            >= self.level_system.get_max_cultivation(
+                self.player.realm
+            )
+        ):
+            if self.item_system is None:
+                self.add_log(
+                    "【突破失敗】背包系統尚未連接。"
+                )
+                return
+
+            pill_count = self.item_system.get_item_count(
+                "foundation_pill"
+            )
+
+            if pill_count <= 0:
+                self.add_log(
+                    "【突破失敗】缺少築基丹，無法突破築基期。"
+                )
+                return
+
+            removed = self.item_system.remove_item(
+                "foundation_pill",
+                1,
+            )
+
+            if removed:
+                self.player.realm = "築基期第1層"
+                self.player.cultivation = 0
+
+                self.add_log(
+                    "【突破成功】服下築基丹，成功晉升築基期第1層！"
+                )
+
+            return
+
         (
             self.player.realm,
             self.player.cultivation,
@@ -137,6 +176,7 @@ class HomeScene(BaseScene):
             self.player.cultivation,
             self.player.spiritual_root,
         )
+
         self.add_log(message)
 
     def _sync_inventory_to_player(self):

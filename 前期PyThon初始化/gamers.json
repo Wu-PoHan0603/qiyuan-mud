@@ -1,20 +1,15 @@
-[
-    {
-        "name": "peter",
-        "realm_index": 0,
-        "realm": "練氣期",
-        "level": 1,
-        "exp": 0,
-        "hp": 100,
-        "mp": 100,
-        "spirit_stone": 50,
-        "pill": 3,
-        "weapon": "木劍",
-        "weapon_ATK": 5,
-        "armor": "布衣",
-        "armor_DEF": 5,
-        "skill": "火球術",
-        "skill_power": 20,
-        "bag": []
-    }
-]
+{
+  "name": "道友",
+  "spiritual_root": "土",
+  "realm": "凡人境界",
+  "cultivation": 0,
+  "spirit_stone": 100,
+  "hp": 100,
+  "mp": 100,
+  "inventory": {
+    "spirit_stone": 100,
+    "foundation_pill": 0,
+    "spirit_grass": 50,
+    "gathering_pill": 0
+  }
+}

@@ -108,9 +108,15 @@ class CreateScene(BaseScene):
                 spiritual_root=self.spiritual_root,
                 realm="凡人境界",
                 cultivation=0,
-                spirit_stone=10,
+                spirit_stone=100,
                 hp=100,
                 mp=100,
+                inventory={
+                    "spirit_stone": 100,
+                    "foundation_pill": 0,
+                    "spirit_grass": 50,
+                    "gathering_pill": 0,
+                },
             )
             return "HOME"
 
