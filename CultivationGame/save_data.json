@@ -1,0 +1,15 @@
+{
+    "name": "道友",
+    "spiritual_root": "木",
+    "realm": "築基期第1層",
+    "cultivation": 240,
+    "spirit_stone": 0,
+    "hp": 100,
+    "mp": 100,
+    "inventory": {
+        "spirit_stone": 0,
+        "foundation_pill": 0,
+        "spirit_grass": 40,
+        "gathering_pill": 0
+    }
+}
