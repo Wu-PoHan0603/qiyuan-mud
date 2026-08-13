@@ -3,9 +3,14 @@ import pygame
 
 from Objects.Player import Player
 from Scenes.BaseScene import BaseScene
+from Systems.cultivation_system import CultivationSystem
+from Systems.exploration_system import ExplorationSystem
+from Systems.fast_training_system import FastTrainingSystem
 from Systems.Level_system import LevelSystem
+from Systems.meditation_system import MeditationSystem
 from Ui.ArchiveMenu import ArchiveMenu
 from Ui.Button import Button
+from Ui.visuals import draw_panel, draw_shadow_text
 
 
 class HomeScene(BaseScene):
@@ -16,6 +21,11 @@ class HomeScene(BaseScene):
         font_path,
         save_system=None,
         item_system=None,
+        meditation_system=None,
+        exploration_system=None,
+        cultivation_system=None,
+        fast_training_system=None,
+        audio_manager=None,
     ):
         self.width = width
         self.height = height
@@ -23,6 +33,19 @@ class HomeScene(BaseScene):
         self.save_system = save_system
         self.item_system = item_system
         self.level_system = LevelSystem()
+        self.meditation_system = (
+            meditation_system or MeditationSystem()
+        )
+        self.exploration_system = (
+            exploration_system or ExplorationSystem()
+        )
+        self.cultivation_system = (
+            cultivation_system or CultivationSystem()
+        )
+        self.fast_training_system = (
+            fast_training_system or FastTrainingSystem()
+        )
+        self.audio_manager = audio_manager
         self.player = Player()
 
         button_y = 610
@@ -113,6 +136,37 @@ class HomeScene(BaseScene):
                 self.archive_menu.close()
                 return "BAG"
 
+            if action == "STATUS":
+                self.archive_menu.close()
+                return "STATUS"
+
+            if action == "SETTING":
+                self.archive_menu.close()
+                return "SETTINGS"
+
+            if action == "MEDITATE":
+                self._meditate()
+                self.archive_menu.close()
+                return None
+
+            if action == "EXPLORE":
+                self._explore()
+                self.archive_menu.close()
+                return None
+
+            if action == "FAST_TRAIN":
+                self._fast_train()
+                self.archive_menu.close()
+                return None
+
+            if action == "SHOP":
+                self.archive_menu.close()
+                return "SHOP"
+
+            if action == "BOSS":
+                self.archive_menu.close()
+                return "BATTLE"
+
             if action is not None:
                 button = self.archive_menu.buttons[action]
                 self.add_log(
@@ -128,55 +182,43 @@ class HomeScene(BaseScene):
         return None
 
     def _train(self):
-        # 練氣九層圓滿，嘗試使用築基丹
-        if (
-            self.player.realm == "練氣期第9層"
-            and self.player.cultivation
-            >= self.level_system.get_max_cultivation(
-                self.player.realm
-            )
-        ):
-            if self.item_system is None:
-                self.add_log(
-                    "【突破失敗】背包系統尚未連接。"
-                )
-                return
-
-            pill_count = self.item_system.get_item_count(
-                "foundation_pill"
-            )
-
-            if pill_count <= 0:
-                self.add_log(
-                    "【突破失敗】缺少築基丹，無法突破築基期。"
-                )
-                return
-
-            removed = self.item_system.remove_item(
-                "foundation_pill",
-                1,
-            )
-
-            if removed:
-                self.player.realm = "築基期第1層"
-                self.player.cultivation = 0
-
-                self.add_log(
-                    "【突破成功】服下築基丹，成功晉升築基期第1層！"
-                )
-
+        handled, _, message = self.level_system.attempt_major_breakthrough(
+            self.player,
+            self.item_system,
+        )
+        if handled:
+            self.add_log(message)
             return
 
-        (
-            self.player.realm,
-            self.player.cultivation,
-            message,
-        ) = self.level_system.train(
-            self.player.realm,
-            self.player.cultivation,
-            self.player.spiritual_root,
+        _, message = self.cultivation_system.cultivate(
+            self.player,
+            self.level_system,
         )
 
+        self.add_log(message)
+
+    def _meditate(self):
+        if self.audio_manager is not None:
+            self.audio_manager.play_scene("MEDITATE")
+        _, _, message = self.meditation_system.meditate(
+            self.player
+        )
+        self.add_log(message)
+
+    def _fast_train(self):
+        _, message = self.fast_training_system.train(
+            self.player,
+            self.level_system,
+            self.cultivation_system,
+        )
+        self.add_log(message)
+
+    def _explore(self):
+        _, message = self.exploration_system.explore(
+            self.player,
+            self.item_system,
+            self.level_system,
+        )
         self.add_log(message)
 
     def _sync_inventory_to_player(self):
@@ -190,6 +232,11 @@ class HomeScene(BaseScene):
                     self.player.spirit_stone,
                 )
             )
+
+    def prepare_player_for_save(self):
+        """Synchronize system-owned inventory before a save operation."""
+        self._sync_inventory_to_player()
+        return self.player
 
     def _save_game(self):
         if self.save_system is None:
@@ -231,12 +278,10 @@ class HomeScene(BaseScene):
         color=(255, 255, 255),
     ):
         font = pygame.font.Font(self.font_path, size)
-        rendered = font.render(text, True, color)
-        rect = rendered.get_rect(midtop=(x, y))
-        surface.blit(rendered, rect)
+        draw_shadow_text(surface, font, text, color, (x, y), "midtop")
 
     def draw(self, screen):
-        screen.fill((20, 30, 25))
+        self.draw_background(screen, (20, 30, 25))
 
         self.draw_text(
             screen,
@@ -257,17 +302,7 @@ class HomeScene(BaseScene):
         self.btn_quit.draw(screen)
 
     def _draw_home_panel(self, screen):
-        pygame.draw.rect(
-            screen,
-            (35, 45, 40),
-            (50, 150, 400, 350),
-        )
-        pygame.draw.rect(
-            screen,
-            (100, 150, 120),
-            (50, 150, 400, 350),
-            2,
-        )
+        draw_panel(screen, (50, 150, 400, 350), (20, 32, 28, 220), (120, 175, 135, 235), 2, 12)
 
         self.draw_text(
             screen,
@@ -326,17 +361,7 @@ class HomeScene(BaseScene):
         )
 
         log_box = pygame.Rect(510, 280, 440, 220)
-        pygame.draw.rect(
-            screen,
-            (22, 28, 30),
-            log_box,
-        )
-        pygame.draw.rect(
-            screen,
-            (100, 130, 110),
-            log_box,
-            1,
-        )
+        draw_panel(screen, log_box, (16, 22, 25, 225), (105, 145, 120, 230), 2, 10)
 
         self.draw_text(
             screen,
@@ -350,12 +375,7 @@ class HomeScene(BaseScene):
         font = pygame.font.Font(self.font_path, 15)
 
         for index, log_text in enumerate(self.logs):
-            rendered = font.render(
-                log_text,
-                True,
-                (220, 220, 210),
-            )
-            screen.blit(
-                rendered,
-                (528, 330 + index * 26),
+            draw_shadow_text(
+                screen, font, log_text, (225, 225, 215),
+                (528, 330 + index * 26), "topleft", offset=(1, 1)
             )

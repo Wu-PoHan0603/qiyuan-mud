@@ -6,6 +6,7 @@ import pygame
 from Objects.Player import Player
 from Scenes.BaseScene import BaseScene
 from Ui.Button import Button
+from Ui.visuals import draw_panel, draw_shadow_text
 
 
 class CreateScene(BaseScene):
@@ -157,12 +158,11 @@ class CreateScene(BaseScene):
         color=(255, 255, 255),
     ):
         font = pygame.font.Font(self.font_path, size)
-        text_surface = font.render(text, True, color)
-        text_rect = text_surface.get_rect(midtop=(x, y))
-        surface.blit(text_surface, text_rect)
+        draw_shadow_text(surface, font, text, color, (x, y), "midtop")
 
     def draw(self, screen):
-        screen.fill((15, 20, 30))
+        self.draw_background(screen, (15, 20, 30))
+        draw_panel(screen, (245, 42, 510, 410), (12, 20, 28, 200), (210, 175, 90, 230), 2, 15)
 
         self.draw_text(
             screen,
@@ -181,12 +181,7 @@ class CreateScene(BaseScene):
             (180, 180, 180),
         )
 
-        pygame.draw.rect(
-            screen,
-            self.input_box_color,
-            self.input_box,
-            2,
-        )
+        draw_panel(screen, self.input_box, (8, 14, 20, 235), (*self.input_box_color, 255), 2, 7)
 
         display_text = self.player_name + self.ime_text
         font = pygame.font.Font(self.font_path, 24)
@@ -198,6 +193,8 @@ class CreateScene(BaseScene):
         name_rect = name_surface.get_rect(
             center=self.input_box.center
         )
+        shadow = font.render(display_text, True, (0, 0, 0))
+        screen.blit(shadow, shadow.get_rect(center=(name_rect.centerx + 2, name_rect.centery + 2)))
         screen.blit(name_surface, name_rect)
 
         self.draw_text(

@@ -1,0 +1,51 @@
+# CODEX STEP 01 — 專案盤點（低用量版）
+
+目標：
+先確認 qiyuan-mud 現況，不改功能、不重構。
+
+請先閱讀：
+CODEX_PROJECT_RULES.txt
+
+本次只做以下工作：
+
+1. 掃描專案根目錄與所有 .py / .json。
+2. 找出：
+   - main.py 入口
+   - Scene / SceneManager
+   - UI Button
+   - Player
+   - Level / Item / Save
+   - Home
+   - Boss / Battle / Shop / Bag（若存在）
+3. 檢查：
+   - ImportError
+   - Circular Import
+   - 檔名大小寫不一致
+   - 缺少檔案
+   - Scene 切換問題
+   - JSON / CSV 存檔問題
+4. 不修改程式碼。
+5. 不新增功能。
+6. 不重新設計 UI。
+7. 不建立傳統 MVC 目錄。
+8. 不大量輸出程式碼。
+
+只回覆以下格式：
+
+【現況】
+- 入口：
+- Scene：
+- System：
+- Object：
+- UI：
+- Save：
+
+【主要問題】
+1.
+2.
+3.
+
+【下一步建議】
+只選 1 個最優先修改項目，並列出需要修改的檔案。
+
+完成後停止，等待下一個 STEP。

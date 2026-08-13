@@ -3,6 +3,7 @@ import pygame
 
 from Scenes.BaseScene import BaseScene
 from Ui.Button import create_menu_buttons_list
+from Ui.visuals import draw_panel, draw_shadow_text
 
 
 class MenuScene(BaseScene):
@@ -50,16 +51,12 @@ class MenuScene(BaseScene):
 
     def draw(self, screen):
         screen.blit(self.background, (0, 0))
-
-        title_surface = self.title_font.render(
-            "修仙世界",
-            True,
-            (255, 255, 255),
+        draw_panel(screen, (315, 75, 370, 145), (10, 18, 26, 150), (225, 190, 105, 220), 2, 18)
+        draw_panel(screen, (350, 320, 300, 300), (10, 18, 26, 135), (180, 150, 90, 180), 1, 14)
+        draw_shadow_text(
+            screen, self.title_font, "修仙世界", (255, 245, 210),
+            (self.width // 2, 150), shadow=(15, 10, 4), offset=(3, 3)
         )
-        title_rect = title_surface.get_rect(
-            center=(self.width // 2, 150)
-        )
-        screen.blit(title_surface, title_rect)
 
         for button in self.buttons:
             button.draw(screen)

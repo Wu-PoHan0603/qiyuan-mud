@@ -2,6 +2,7 @@
 import pygame
 
 from Ui.Button import Button
+from Ui.visuals import draw_panel, draw_shadow_text
 
 
 class ArchiveMenu:
@@ -91,28 +92,13 @@ class ArchiveMenu:
         if not self.is_open:
             return
 
-        pygame.draw.rect(
-            screen,
-            (25, 30, 35),
-            self.panel,
-        )
-        pygame.draw.rect(
-            screen,
-            (180, 150, 100),
-            self.panel,
-            2,
-        )
+        draw_panel(screen, self.panel, (18, 24, 30, 235), (210, 170, 90, 250), 2, 14)
 
         title_font = pygame.font.Font(self.font_path, 26)
-        title_surface = title_font.render(
-            "─── 大道天書．萬法歸宗 ───",
-            True,
-            (220, 190, 130),
+        draw_shadow_text(
+            screen, title_font, "─── 大道天書．萬法歸宗 ───",
+            (235, 205, 135), (self.width // 2, 155), "midtop"
         )
-        title_rect = title_surface.get_rect(
-            midtop=(self.width // 2, 155)
-        )
-        screen.blit(title_surface, title_rect)
 
         for button in self.buttons.values():
             button.draw(screen)

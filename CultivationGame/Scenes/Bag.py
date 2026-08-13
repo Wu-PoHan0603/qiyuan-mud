@@ -3,6 +3,7 @@ import pygame
 
 from Scenes.BaseScene import BaseScene
 from Ui.Button import Button
+from Ui.visuals import draw_panel, draw_shadow_text, draw_wrapped_text
 
 
 class BagScene(BaseScene):
@@ -29,13 +30,36 @@ class BagScene(BaseScene):
         self.home_scene = home_scene
 
         self.message = "神識已探入儲物袋。"
+        self.selected_item = "gathering_pill"
+        self.items_panel = pygame.Rect(40, 115, 920, 345)
+        columns = 3
+        rows_per_column = 8
+        button_width = 280
+        button_height = 32
+        gap_x = 20
+        gap_y = 8
+        start_x = self.items_panel.x + 20
+        start_y = self.items_panel.y + 18
+        self.item_buttons = {}
+        for index, item_id in enumerate(self.item_system.item_database):
+            column = index // rows_per_column
+            row = index % rows_per_column
+            self.item_buttons[item_id] = Button(
+                start_x + column * (button_width + gap_x),
+                start_y + row * (button_height + gap_y),
+                button_width,
+                button_height,
+                self.item_system.get_item_name(item_id),
+                font_path,
+                16,
+            )
 
         self.btn_use_gathering = Button(
             380,
             500,
             240,
             55,
-            "使用聚氣丹",
+            "使用 / 裝備",
             font_path,
             24,
         )
@@ -57,8 +81,16 @@ class BagScene(BaseScene):
         print("【場景】離開儲物袋")
 
     def handle_event(self, event):
+        for item_id, button in self.item_buttons.items():
+            if button.is_clicked(event):
+                self.selected_item = item_id
+                self.message = (
+                    f"已選取【{self.item_system.get_item_name(item_id)}】。"
+                )
+                return None
+
         if self.btn_use_gathering.is_clicked(event):
-            self.use_gathering_pill()
+            self.use_selected_item()
             return None
 
         if self.btn_back.is_clicked(event):
@@ -67,70 +99,26 @@ class BagScene(BaseScene):
         return None
 
     def update(self):
+        for item_id, button in self.item_buttons.items():
+            count = self.item_system.get_item_count(item_id)
+            name = self.item_system.get_item_name(item_id)
+            button.text = f"{name} x{count}"
+            button.update()
         self.btn_use_gathering.update()
         self.btn_back.update()
 
     def use_gathering_pill(self):
-        pill_count = self.item_system.get_item_count(
-            "gathering_pill"
+        self.selected_item = "gathering_pill"
+        self.use_selected_item()
+
+    def use_selected_item(self):
+        _, message = self.item_system.use_or_equip(
+            self.home_scene.player,
+            self.selected_item,
+            self.home_scene.level_system,
         )
-
-        if pill_count <= 0:
-            self.message = "聚氣丹不足，無法服用。"
-            return
-
-        # 練氣九層已圓滿時，不允許浪費聚氣丹
-        current_realm = self.home_scene.player.realm
-        current_cultivation = (
-            self.home_scene.player.cultivation
-        )
-
-        current_max = (
-            self.home_scene.level_system
-            .get_max_cultivation(current_realm)
-        )
-
-        if (
-            current_realm == "練氣期第9層"
-            and current_cultivation >= current_max
-        ):
-            self.message = (
-                "目前已達練氣九層圓滿，"
-                "請使用築基丹突破。"
-            )
-            return
-
-        removed = self.item_system.remove_item(
-            "gathering_pill",
-            1,
-        )
-
-        if not removed:
-            self.message = "聚氣丹使用失敗。"
-            return
-
-        (
-            new_realm,
-            new_cultivation,
-            result_message,
-        ) = self.home_scene.level_system.add_cultivation(
-            current_realm,
-            current_cultivation,
-            50,
-        )
-
-        self.home_scene.player.realm = new_realm
-        self.home_scene.player.cultivation = (
-            new_cultivation
-        )
-
-        self.message = (
-            f"服下聚氣丹，{result_message}"
-        )
-
-        self.home_scene.add_log(
-            f"【丹藥生效】{result_message}"
-        )
+        self.message = message
+        self.home_scene.add_log(message)
 
     def draw_text(
         self,
@@ -145,18 +133,10 @@ class BagScene(BaseScene):
             self.font_path,
             size,
         )
-        rendered = font.render(
-            text,
-            True,
-            color,
-        )
-        rect = rendered.get_rect(
-            midtop=(x, y)
-        )
-        surface.blit(rendered, rect)
+        draw_shadow_text(surface, font, text, color, (x, y), "midtop")
 
     def draw(self, screen):
-        screen.fill((18, 24, 32))
+        self.draw_background(screen, (18, 24, 32))
 
         self.draw_text(
             screen,
@@ -167,56 +147,22 @@ class BagScene(BaseScene):
             (200, 190, 130),
         )
 
-        panel = pygame.Rect(
-            180,
-            140,
-            640,
-            300,
-        )
-        pygame.draw.rect(
+        draw_panel(
             screen,
-            (28, 35, 45),
-            panel,
-        )
-        pygame.draw.rect(
-            screen,
-            (120, 140, 160),
-            panel,
+            self.items_panel,
+            (18, 27, 38, 225),
+            (130, 155, 180, 235),
             2,
+            10,
         )
 
-        inventory_rows = [
-            ("spirit_stone", "靈石"),
-            ("spirit_grass", "靈藥草"),
-            ("gathering_pill", "聚氣丹"),
-            ("foundation_pill", "築基丹"),
-        ]
+        for button in self.item_buttons.values():
+            button.draw(screen)
 
-        start_y = 185
-
-        for index, (item_id, item_name) in enumerate(
-            inventory_rows
-        ):
-            amount = self.item_system.get_item_count(
-                item_id
-            )
-
-            self.draw_text(
-                screen,
-                f"{item_name}：{amount}",
-                24,
-                self.width // 2,
-                start_y + index * 55,
-                (230, 230, 220),
-            )
-
-        self.draw_text(
-            screen,
-            self.message,
-            20,
-            self.width // 2,
-            455,
-            (255, 230, 160),
+        draw_panel(screen, (190, 450, 620, 43), (15, 20, 28, 215), (175, 145, 85, 220), 1, 8)
+        draw_wrapped_text(
+            screen, pygame.font.Font(self.font_path, 19), self.message,
+            (255, 230, 160), (205, 460, 590, 28), max_lines=1
         )
 
         self.btn_use_gathering.draw(screen)

@@ -1,3 +1,2 @@
-https://github.com/lxgw/lxgw/blob/main/Donate.md
 pygame==2.6.1
-pip install -r Requirements.txt
+watchdog>=4.0

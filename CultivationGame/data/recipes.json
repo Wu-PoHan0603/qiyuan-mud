@@ -1,0 +1,11 @@
+{
+  "gathering_pill": {"name": "聚氣丹", "materials": {"spirit_stone": 30}, "success_rate": 60},
+  "foundation_pill": {"name": "築基丹", "materials": {"spirit_grass": 5, "spirit_stone": 50}, "success_rate": 35},
+  "golden_core_pill": {"name": "結金丹", "materials": {"spirit_grass": 10, "spirit_stone": 150}, "success_rate": 30},
+  "nascent_soul_pill": {"name": "結嬰丹", "materials": {"spirit_grass": 20, "spirit_stone": 400}, "success_rate": 25},
+  "spirit_transformation_pill": {"name": "化神丹", "materials": {"spirit_grass": 35, "spirit_stone": 1000}, "success_rate": 20},
+  "void_refinement_pill": {"name": "煉虛丹", "materials": {"spirit_grass": 50, "spirit_stone": 2500}, "success_rate": 18},
+  "body_integration_pill": {"name": "合體丹", "materials": {"spirit_grass": 75, "spirit_stone": 6000}, "success_rate": 15},
+  "tribulation_pill": {"name": "渡劫丹", "materials": {"spirit_grass": 100, "spirit_stone": 15000}, "success_rate": 12},
+  "mahayana_pill": {"name": "大乘丹", "materials": {"spirit_grass": 150, "spirit_stone": 40000}, "success_rate": 10}
+}

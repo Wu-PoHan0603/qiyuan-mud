@@ -1,6 +1,8 @@
 # Ui/Button.py
 import pygame
 
+from Ui.visuals import draw_panel, draw_shadow_text
+
 
 class Button:
     """共用按鈕元件：update() 處理懸停，is_clicked() 處理事件點擊。"""
@@ -24,10 +26,10 @@ class Button:
         else:
             self.font = pygame.font.SysFont(None, font_size)
 
-        self.normal_color = (70, 70, 70)
-        self.hover_color = (120, 120, 120)
+        self.normal_color = (28, 35, 42, 225)
+        self.hover_color = (105, 80, 38, 240)
         self.text_color = (255, 255, 255)
-        self.border_color = (255, 255, 255)
+        self.border_color = (220, 185, 105, 245)
 
         # 必須在 normal_color 建立後再初始化
         self.current_color = self.normal_color
@@ -51,12 +53,21 @@ class Button:
 
     def draw(self, surface):
         """繪製按鈕、邊框與文字。"""
-        pygame.draw.rect(surface, self.current_color, self.rect)
-        pygame.draw.rect(surface, self.border_color, self.rect, 2)
-
-        text_surface = self.font.render(self.text, True, self.text_color)
-        text_rect = text_surface.get_rect(center=self.rect.center)
-        surface.blit(text_surface, text_rect)
+        draw_panel(
+            surface,
+            self.rect,
+            (*self.current_color[:3], 225),
+            self.border_color,
+            2,
+            8,
+        )
+        draw_shadow_text(
+            surface,
+            self.font,
+            self.text,
+            self.text_color,
+            self.rect.center,
+        )
 
 
 def create_menu_buttons_list(

@@ -1,78 +1,67 @@
-# Systems/Item_system.py
+from Systems.data_loader import load_items
+
+
 class ItemSystem:
-    """背包與道具數量管理。"""
+    """管理物品定義、背包數量、使用與裝備行為。"""
 
-    def __init__(self):
-        self.item_database = {
-            "spirit_stone": {
-                "name": "靈石",
-                "type": "currency",
-                "desc": "修仙界通用貨幣。",
-            },
-            "foundation_pill": {
-                "name": "築基丹",
-                "type": "potion",
-                "desc": "突破築基期必備丹藥。",
-            },
-            "spirit_grass": {
-                "name": "靈藥草",
-                "type": "material",
-                "desc": "煉丹基礎材料。",
-            },
-            "gathering_pill": {
-                "name": "聚氣丹",
-                "type": "potion",
-                "desc": "服用後增加修為。",
-            },
-        }
+    STARTING_ITEMS = {
+        "spirit_stone": 100,
+        "spirit_grass": 50,
+    }
 
-        # 為方便測試煉丹，初始給予部分材料
+    def __init__(self, item_database=None):
+        self.item_database = item_database or load_items()
         self.inventory = {
-            "spirit_stone": 100,
-            "foundation_pill": 0,
-            "spirit_grass": 50,
-            "gathering_pill": 0,
+            item_id: self.STARTING_ITEMS.get(item_id, 0)
+            for item_id in self.item_database
         }
+
+    def use_or_equip(self, player, item_id, level_system):
+        item = self.item_database.get(item_id)
+        if item is None:
+            return False, "不存在的物品。"
+        if self.get_item_count(item_id) <= 0:
+            return False, f"{item['name']}數量不足。"
+
+        if item["type"] == "weapon":
+            player.weapon = item["name"]
+            player.weapon_atk = item["attack"]
+            return True, f"已裝備{item['name']}。"
+        if item["type"] == "armor":
+            player.armor = item["name"]
+            player.armor_def = item["defense"]
+            return True, f"已裝備{item['name']}。"
+        if item["type"] == "skill":
+            player.skill = item["name"]
+            player.skill_power = item["power"]
+            return True, f"已切換技能為{item['name']}。"
+        if item_id != "gathering_pill":
+            return False, "此物品不能直接使用或裝備。"
+
+        realm, cultivation, message = level_system.add_cultivation(
+            player.realm, player.cultivation, 50
+        )
+        if realm == player.realm and cultivation == player.cultivation:
+            return False, message
+        self.remove_item(item_id, 1)
+        player.realm = realm
+        player.cultivation = cultivation
+        player.inventory = self.get_save_data()
+        return True, f"服用聚氣丹。{message}"
 
     def get_item_name(self, item_id):
-        return self.item_database.get(
-            item_id,
-            {"name": item_id},
-        )["name"]
+        return self.item_database.get(item_id, {"name": item_id})["name"]
 
     def add_item(self, item_id, amount=1):
-        if amount <= 0:
+        if amount <= 0 or item_id not in self.inventory:
             return False
-
-        if item_id not in self.inventory:
-            print(f"【背包】不存在道具：{item_id}")
-            return False
-
         self.inventory[item_id] += amount
-        print(
-            f"【背包】獲得"
-            f"【{self.get_item_name(item_id)}】x{amount}"
-        )
         return True
 
     def remove_item(self, item_id, amount=1):
-        if amount <= 0:
+        if amount <= 0 or self.inventory.get(item_id, 0) < amount:
             return False
-
-        current = self.inventory.get(item_id, 0)
-
-        if current < amount:
-            print(
-                f"【背包】"
-                f"【{self.get_item_name(item_id)}】不足。"
-            )
-            return False
-
         self.inventory[item_id] -= amount
-        print(
-            f"【背包】消耗"
-            f"【{self.get_item_name(item_id)}】x{amount}"
-        )
         return True
 
     def get_item_count(self, item_id):
@@ -84,9 +73,19 @@ class ItemSystem:
     def load_save_data(self, saved_inventory):
         if not saved_inventory:
             return
-
         for item_id in self.inventory:
             if item_id in saved_inventory:
-                self.inventory[item_id] = int(
-                    saved_inventory[item_id]
-                )
+                value = saved_inventory[item_id]
+                if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+                    self.inventory[item_id] = value
+
+    def reload_data(self, item_database):
+        if not isinstance(item_database, dict):
+            return False, "物品資料格式錯誤。"
+        if set(item_database) != set(self.item_database):
+            return False, "物品 ID 有增減，為避免背包資料遺失已取消重新載入。"
+        self.item_database = {
+            item_id: dict(item)
+            for item_id, item in item_database.items()
+        }
+        return True, "物品資料已重新載入。"

@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+logs/
+saves/*.tmp
+saves/debug_save.json
+saves/settings.json
+build/
+dist/
+*.spec.bak

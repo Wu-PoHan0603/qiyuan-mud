@@ -2,10 +2,11 @@
 class SceneManager:
     """管理目前場景、場景生命週期與畫面轉換。"""
 
-    def __init__(self):
+    def __init__(self, audio_manager=None):
         self.scenes = {}
         self.current = None
         self.current_name = None
+        self.audio_manager = audio_manager
 
     def add_scene(self, name, scene):
         if not name:
@@ -34,6 +35,16 @@ class SceneManager:
         enter_method = getattr(self.current, "enter", None)
         if callable(enter_method):
             enter_method()
+        if self.audio_manager is not None:
+            self.audio_manager.play_scene(name)
+
+    def reload_current(self):
+        """Re-enter the active scene through the normal lifecycle hooks."""
+        if self.current_name is None:
+            return False
+
+        self.change_scene(self.current_name)
+        return True
 
     def handle_event(self, event):
         if self.current is None:
